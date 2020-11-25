@@ -29,7 +29,10 @@
 import Foundation
 import UIKit
 
-
+// Let's talk to the chatroom view controller
+protocol ChatRoomDelegate: class {
+  func received(message: Message)
+}
 
 class ChatRoom: NSObject {
   //1 declare your input and output streams. Using this pair of classes together allows you to create a socket-based connection between your app and the chat server. Naturally, you’ll send messages via the output stream and receive them via the input stream.
