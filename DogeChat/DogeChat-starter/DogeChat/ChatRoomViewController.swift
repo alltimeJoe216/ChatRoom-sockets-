@@ -42,7 +42,7 @@ class ChatRoomViewController: UIViewController {
     super.viewWillAppear(animated)
     chatRoom.setupNetworkConnection() // Establish connection
     chatRoom.joinChat(username: username) // User joins chat
-    
+    chatRoom.delegate = self
   }
   
   override func viewWillDisappear(_ animated: Bool) {
@@ -56,4 +56,11 @@ extension ChatRoomViewController: MessageInputDelegate {
   func sendWasTapped(message: String) {
     
   }
+}
+extension ChatRoomViewController: ChatRoomDelegate {
+  func received(message: Message) {
+    insertNewMessageCell(message)
+  }
+  
+  
 }

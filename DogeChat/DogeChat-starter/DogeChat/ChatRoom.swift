@@ -35,6 +35,11 @@ protocol ChatRoomDelegate: class {
 }
 
 class ChatRoom: NSObject {
+  
+  // Weak optional property to hold a reference to WHOMEVER decides to become the ChatRoom's delegate
+  weak var delegate: ChatRoomDelegate?
+  
+  
   //1 declare your input and output streams. Using this pair of classes together allows you to create a socket-based connection between your app and the chat server. Naturally, you’ll send messages via the output stream and receive them via the input stream.
   var inputStream: InputStream!
   var outputStream: OutputStream!
@@ -143,6 +148,8 @@ extension ChatRoom: StreamDelegate {
       if let message =
           processedMessageString(buffer: buffer, length: numberOfBytesRead) {
         // Notify interested parties
+        delegate?.received(message: message) // MESSAGE
+
       }
 
     }
