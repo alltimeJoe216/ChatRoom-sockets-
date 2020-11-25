@@ -102,6 +102,24 @@ class ChatRoom: NSObject {
       outputStream.write(pointer, maxLength: data.count)
     }
   }
+  
+  /*
+   
+   /// - 
+   
+   */
+  func send(message: String) {
+    let data = "msg:\(message)".data(using: .utf8)!
+
+    _ = data.withUnsafeBytes {
+      guard let pointer = $0.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
+        print("Error joining chat")
+        return
+      }
+      outputStream.write(pointer, maxLength: data.count)
+    }
+  }
+
 }
 
 extension ChatRoom: StreamDelegate {
@@ -144,14 +162,11 @@ extension ChatRoom: StreamDelegate {
       }
 
       // Construct the Message object (configured below)
-      
       if let message =
           processedMessageString(buffer: buffer, length: numberOfBytesRead) {
         // Notify interested parties
         delegate?.received(message: message) // MESSAGE
-
       }
-
     }
   }
   
@@ -178,8 +193,5 @@ extension ChatRoom: StreamDelegate {
     //3 construct message
     return Message(message: message, messageSender: messageSender, username: name)
   }
-
-
-
 }
 
