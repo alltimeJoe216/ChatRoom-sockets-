@@ -103,14 +103,16 @@ class ChatRoom: NSObject {
     }
   }
   
+  //MARK: - Sending Message
+  
   /*
-   
-   /// - 
+   /// - Prepares message with prefix 'msg:'
+   /// - Write to pointer
    
    */
   func send(message: String) {
     let data = "msg:\(message)".data(using: .utf8)!
-
+    
     _ = data.withUnsafeBytes {
       guard let pointer = $0.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
         print("Error joining chat")
@@ -119,29 +121,33 @@ class ChatRoom: NSObject {
       outputStream.write(pointer, maxLength: data.count)
     }
   }
-
+  
+  //MARK: - End session, close stream, remove from run loop
+  
+  func stopChatSession() {
+    inputStream.close()
+    outputStream.close()
+  }
 }
 
+// MARK: - Handle incoming messages / Stream
 extension ChatRoom: StreamDelegate {
   
-  // MARK: - Handle incoming messages / Stream
-  
-  //
   func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
-      switch eventCode {
-      case .hasBytesAvailable:
-        print("new message received") // There's an incoming message to read
-        readAvailableBytes(stream: aStream as! InputStream) // We have a buffer full of bytes
-
-      case .endEncountered:
-        print("new message received")
-      case .errorOccurred:
-        print("error occurred")
-      case .hasSpaceAvailable:
-        print("has space available")
-      default:
-        print("some other event...")
-      }
+    switch eventCode {
+    case .hasBytesAvailable:
+      print("new message received") // There's an incoming message to read
+      readAvailableBytes(stream: aStream as! InputStream) // We have a buffer full of bytes
+    
+    case .endEncountered:
+      stopChatSession() /// Close streams and remove from run loop
+    case .errorOccurred:
+      print("error occurred")
+    case .hasSpaceAvailable:
+      print("has space available")
+    default:
+      print("some other event...")
+    }
   }
   
   // Handle incoming messages
@@ -149,18 +155,18 @@ extension ChatRoom: StreamDelegate {
   private func readAvailableBytes(stream: InputStream) {
     //1 Buffer to read incoming bytes
     let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: maxReadLength)
-
+    
     //2 loop as long as the input stream has bytes to read
     while stream.hasBytesAvailable {
       //3 at every point, call read() which will read bytes from the stream and put them into the buffer
       let numberOfBytesRead = inputStream.read(buffer, maxLength: maxReadLength)
-
+      
       //4 if call returns a negative value, some error occured and let's bounce out this thang
       if numberOfBytesRead < 0, let error = stream.streamError {
         print(error)
         break
       }
-
+      
       // Construct the Message object (configured below)
       if let message =
           processedMessageString(buffer: buffer, length: numberOfBytesRead) {
@@ -183,8 +189,8 @@ extension ChatRoom: StreamDelegate {
         freeWhenDone: true)?.components(separatedBy: ":"),
       let name = stringArray.first,
       let message = stringArray.last
-      else {
-        return nil
+    else {
+      return nil
     }
     //2 figure out if you or someone else sent the message based on the name. In a production app, you'd want to use some kind of unique token, but for now, this is good enough.
     
